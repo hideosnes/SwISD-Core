@@ -1,0 +1,94 @@
+// 1. Relative path: src/config/schema.ts
+// 2. Description: Strict type definitions and runtime validation guards for the USB provisioning schema and Genesis fallback constants.
+// 3. Expects: Raw, untrusted JSON data from the USB stick or environment.
+// 4. Provides: Exhaustively typed `ProvisionConfig`, strict type guards, and the hardcoded Genesis network contract.
+
+export type ProvisionRole = 'auto' | 'input' | 'worker';
+
+export interface HuggingFaceModelSource {
+  readonly type: 'hf';
+  readonly url: string;
+}
+
+export interface WifiConfig {
+  readonly ssid: string;
+  readonly psk: string;
+  readonly country: string; // ISO 3166-1 alpha-2
+}
+
+export interface TailscaleConfig {
+  readonly authKey: string;
+  readonly hostname?: string;
+}
+
+export interface ProvisionConfig {
+  readonly wifi: WifiConfig;
+  readonly role: ProvisionRole;
+  readonly modelSource: HuggingFaceModelSource;
+  readonly tailscale?: TailscaleConfig;
+  readonly version: number;
+}
+
+// --- Genesis Fallback Protocol Constants ---
+// These are baked into the Pi image as a low-priority NetworkManager profile.
+// If the Pi boots with no known network, it falls back to this SSID to allow the Conductor to discover it.
+export const GENESIS_SSID = 'SwISD-Genesis';
+export const GENESIS_PSK = 'genesis-swarm-0000';
+
+// --- Strict Runtime Type Guards ---
+
+export function isHuggingFaceModelSource(data: unknown): data is HuggingFaceModelSource {
+  if (typeof data !== 'object' || data === null) return false;
+  const obj = data as Record<string, unknown>;
+
+  if (obj.type !== 'hf' || typeof obj.url !== 'string' || obj.url.length === 0) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(obj.url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
+export function isWifiConfig(data: unknown): data is WifiConfig {
+  if (typeof data !== 'object' || data === null) return false;
+  const obj = data as Record<string, unknown>;
+
+  return (
+    typeof obj.ssid === 'string' &&
+    typeof obj.psk === 'string' &&
+    typeof obj.country === 'string' &&
+    obj.country.length === 2 // Strict ISO alpha-2 length check
+  );
+}
+
+export function isTailscaleConfig(data: unknown): data is TailscaleConfig | undefined {
+  if (data === undefined) return true;
+  if (typeof data !== 'object' || data === null) return false;
+  const obj = data as Record<string, unknown>;
+  return (
+    typeof obj.authKey === 'string' && obj.authKey.length > 0 &&
+    (obj.hostname === undefined || typeof obj.hostname === 'string')
+  );
+}
+
+export function isProvisionConfig(data: unknown): data is ProvisionConfig {
+  if (typeof data !== 'object' || data === null) return false;
+  const obj = data as Record<string, unknown>;
+
+  const isValidRole = (r: unknown): r is ProvisionRole =>
+    r === 'auto' || r === 'input' || r === 'worker';
+
+  return (
+    isWifiConfig(obj.wifi) &&
+    isValidRole(obj.role) &&
+    isHuggingFaceModelSource(obj.modelSource) &&
+    isTailscaleConfig(obj.tailscale) &&
+    typeof obj.version === 'number' &&
+    Number.isInteger(obj.version) &&
+    obj.version >= 1
+  );
+}

@@ -1,0 +1,48 @@
+{
+  "_doc": [
+    "1. Relative path: package.json",
+    "2. Description: Manifest for SwISD-Core — the headless Pi runtime library (config, crypto, delivery, provision, models, storage, performance, observability).",
+    "3. Expects: Node 22+ runtime, strict ESM.",
+    "4. Provides: Entrypoints, build scripts, and dependency resolution for the core library.",
+    "5. SPDX-License-Identifier: MPL-2.0",
+    "6. Copyright (c) 2026 Homahuki GmbH"
+  ],
+  "name": "swisd-core",
+  "version": "0.1.0",
+  "description": "SwISD Core — headless node runtime: config, crypto, OTA delivery, provisioning, model storage, observability",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./config": "./dist/config/index.js",
+    "./crypto": "./dist/crypto/index.js",
+    "./delivery": "./dist/delivery/index.js",
+    "./models": "./dist/models/index.js",
+    "./observability": "./dist/observability/index.js",
+    "./performance": "./dist/performance/index.js",
+    "./provision": "./dist/provision/index.js",
+    "./storage": "./dist/storage/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/swisd-project/SwISD-Core.git"
+  },
+  "author": "Hidéo Snes, Homahuki GmbH, 2026",
+  "license": "MPL-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@noble/hashes": "^2.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "typescript": "7.0.2"
+  }
+}
